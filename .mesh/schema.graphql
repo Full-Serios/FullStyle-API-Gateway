@@ -1,0 +1,1150 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+directive @statusCodeTypeName(subgraph: String, typeName: String, statusCode: String) repeatable on UNION
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+directive @resolveRoot(subgraph: String) on FIELD_DEFINITION
+
+type Query {
+  dummy: String
+  """Obtiene la información de un usuario específico"""
+  user_by_id(
+    """ID del usuario"""
+    id: Int!
+  ): user_by_id_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/user/{args.id}", httpMethod: GET)
+  """Obtiene la lista de sitios filtrados por los parámetros proporcionados"""
+  site(
+    """ID del sitio"""
+    id: Int
+    """Nombre del sitio"""
+    name: String
+    """Dirección del sitio"""
+    address: String
+    """ID del administrador del sitio"""
+    manager_id: Int
+    """ID de la categoría"""
+    category_id: Int
+    """ID del servicio"""
+    service_id: Int
+  ): [query_site_items] @httpOperation(subgraph: "fs_ms_lc", path: "/site", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"name\":\"name\",\"address\":\"address\",\"manager_id\":\"manager_id\",\"category_id\":\"category_id\",\"service_id\":\"service_id\"}")
+  """Obtiene la lista de las categorías por sitio"""
+  site_has_category: JSON @httpOperation(subgraph: "fs_ms_lc", path: "/site_has_category", httpMethod: GET)
+  """Obtiene la lista de citas filtradas por los parámetros proporcionados"""
+  appointment(
+    """ID de la cita"""
+    id: Int
+    """Estado de la cita (pending, confirmed, canceled, completed)"""
+    status: String
+    """ID del trabajador"""
+    worker_id: Int
+    """ID del sitio"""
+    site_id: Int
+    """ID del servicio"""
+    service_id: Int
+    """ID del cliente"""
+    client_id: Int
+  ): [query_appointment_items] @httpOperation(subgraph: "fs_ms_lc", path: "/appointment", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"status\":\"status\",\"worker_id\":\"worker_id\",\"site_id\":\"site_id\",\"service_id\":\"service_id\",\"client_id\":\"client_id\"}")
+  """Obtiene detalles adicionales de las citas"""
+  appointmentdetail(
+    """ID de la cita"""
+    id: Int
+    """ID del trabajador"""
+    worker_id: Int
+    """ID del sitio"""
+    site_id: Int
+    """ID del servicio"""
+    service_id: Int
+    """Status"""
+    status: String
+    """ID del cliente"""
+    client_id: Int
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/appointmentdetail", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"worker_id\":\"worker_id\",\"site_id\":\"site_id\",\"service_id\":\"service_id\",\"status\":\"status\",\"client_id\":\"client_id\"}")
+  """Obtiene estadísticas de citas agrupadas por trabajador"""
+  appointment_worker_statistics(
+    """ID del sitio"""
+    site_id: Int
+    """Periodicidad"""
+    period: String
+    """Cantidad de periodos"""
+    count_periods: Int
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/appointment/worker_statistics", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"period\":\"period\",\"count_periods\":\"count_periods\"}")
+  """Obtiene estadísticas de citas agrupadas por sitio"""
+  appointment_site_statistics(
+    """ID del sitio"""
+    site_id: Int
+    """Periodicidad"""
+    period: String
+    """Cantidad de periodos"""
+    count_periods: Int
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/appointment/site_statistics", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"period\":\"period\",\"count_periods\":\"count_periods\"}")
+  """Obtiene estadísticas de citas agrupadas por servicio"""
+  appointment_service_statistics(
+    """ID del sitio"""
+    site_id: Int
+    """Periodicidad"""
+    period: String
+    """Cantidad de periodos"""
+    count_periods: Int
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/appointment/service_statistics", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"period\":\"period\",\"count_periods\":\"count_periods\"}")
+  """
+  Obtiene la lista de servicios filtrados por los parámetros proporcionados
+  """
+  service(
+    """ID del servicio"""
+    id: Int
+    """Nombre del servicio"""
+    name: String
+    """ID de la categoría"""
+    category_id: Int
+  ): [query_service_items] @httpOperation(subgraph: "fs_ms_lc", path: "/service", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"name\":\"name\",\"category_id\":\"category_id\"}")
+  """Obtiene la lista de todas las categorías"""
+  category: [query_category_items] @httpOperation(subgraph: "fs_ms_lc", path: "/category", httpMethod: GET)
+  """
+  Obtiene la lista de trabajadores filtrados por los parámetros proporcionados
+  """
+  worker(
+    """ID del trabajador"""
+    id: Int
+    """Nombre del trabajador"""
+    name: String
+    """ID del sitio"""
+    site_id: Int
+    """ID del servicio"""
+    service_id: Int
+  ): [query_worker_items] @httpOperation(subgraph: "fs_ms_lc", path: "/worker", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"name\":\"name\",\"site_id\":\"site_id\",\"service_id\":\"service_id\"}")
+  """Obtiene el horario semanal de un trabajador específico"""
+  worker_weekly_schedule(
+    """ID del trabajador"""
+    worker_id: Int!
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/worker/weekly_schedule", httpMethod: GET, queryParamArgMap: "{\"worker_id\":\"worker_id\"}")
+  """Obtiene el horario diario de un trabajador específico"""
+  worker_daily_schedule(
+    """ID del trabajador"""
+    worker_id: Int!
+    """Fecha (YYYY-MM-DD)"""
+    date: Date!
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/worker/daily_schedule", httpMethod: GET, queryParamArgMap: "{\"worker_id\":\"worker_id\",\"date\":\"date\"}")
+  """Obtiene la lista de los servicios por trabajador"""
+  worker_has_service: JSON @httpOperation(subgraph: "fs_ms_lc", path: "/worker_has_service", httpMethod: GET)
+  """Obtiene la información de suscripción de un administrador"""
+  subscription_by_id(
+    """ID del administrador"""
+    id: Int!
+  ): subscription_by_id_response @httpOperation(subgraph: "fs_ms_lc", path: "/subscription/{args.id}", httpMethod: GET)
+  """
+  Obtiene la lista de notificaciones filtradas por los parámetros proporcionados
+  """
+  notification(
+    """ID de la notificación"""
+    id: Int
+    """Estado de la notificación (pending, read, etc.)"""
+    status: String
+    """ID de la cita asociada"""
+    appointment_id: Int
+    """Tipo de notificación"""
+    type: String
+    """ID del trabajador asociado a la cita"""
+    worker_id: Int
+    """ID del servicio asociado a la cita"""
+    service_id: Int
+    """ID del sitio asociado a la cita"""
+    site_id: Int
+  ): [notification_response] @httpOperation(subgraph: "fs_ms_lc", path: "/notification", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"status\":\"status\",\"appointment_id\":\"appointment_id\",\"type\":\"type\",\"worker_id\":\"worker_id\",\"service_id\":\"service_id\",\"site_id\":\"site_id\"}")
+  """Obtiene la lista de pagos filtrados por los parámetros proporcionados"""
+  payment(
+    """ID del pago"""
+    id: Int
+    """Estado del pago (pending, completed, etc.)"""
+    status: String
+    """ID de la cita asociada"""
+    appointment_id: Int
+    """Mostrar pagos con monto menor o igual a este valor"""
+    amount: Int
+    """Método de pago (efectivo, tarjeta, etc.)"""
+    paymentmethod: String
+    """ID del trabajador asociado a la cita"""
+    worker_id: Int
+    """ID del servicio asociado a la cita"""
+    service_id: Int
+    """ID del sitio asociado a la cita"""
+    site_id: Int
+  ): [payment_response] @httpOperation(subgraph: "fs_ms_lc", path: "/payment", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"status\":\"status\",\"appointment_id\":\"appointment_id\",\"amount\":\"amount\",\"paymentmethod\":\"paymentmethod\",\"worker_id\":\"worker_id\",\"service_id\":\"service_id\",\"site_id\":\"site_id\"}")
+  """Obtiene estadísticas de pagos agrupadas por trabajador"""
+  payment_worker_statistics(
+    """ID del sitio"""
+    site_id: Int!
+    """Periodicidad (total, daily, weekly, monthly)"""
+    period: String
+    """Número de períodos a incluir desde la fecha actual hacia atrás"""
+    count_periods: Int
+  ): payment_worker_statistics_response @httpOperation(subgraph: "fs_ms_lc", path: "/payment/worker_statistics", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"period\":\"period\",\"count_periods\":\"count_periods\"}")
+  """Obtiene estadísticas de pagos agrupadas por sitio"""
+  payment_site_statistics(
+    """ID del sitio"""
+    site_id: Int!
+    """Periodicidad (total, daily, weekly, monthly)"""
+    period: String
+    """Número de períodos a incluir desde la fecha actual hacia atrás"""
+    count_periods: Int
+  ): payment_site_statistics_response @httpOperation(subgraph: "fs_ms_lc", path: "/payment/site_statistics", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"period\":\"period\",\"count_periods\":\"count_periods\"}")
+  """Obtiene estadísticas de pagos agrupadas por servicio"""
+  payment_service_statistics(
+    """ID del sitio"""
+    site_id: Int!
+    """Periodicidad (total, daily, weekly, monthly)"""
+    period: String
+    """Número de períodos a incluir desde la fecha actual hacia atrás"""
+    count_periods: Int
+  ): payment_service_statistics_response @httpOperation(subgraph: "fs_ms_lc", path: "/payment/service_statistics", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"period\":\"period\",\"count_periods\":\"count_periods\"}")
+  """
+  Obtiene los detalles de servicios filtrados por los parámetros proporcionados
+  """
+  detail(
+    """ID del sitio"""
+    site_id: Int
+    """ID del servicio"""
+    service_id: Int
+    """Nombre del servicio"""
+    name: String
+    """Precio del servicio"""
+    price: Int
+    """ID de la categoría"""
+    category_id: Int
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/detail", httpMethod: GET, queryParamArgMap: "{\"site_id\":\"site_id\",\"service_id\":\"service_id\",\"name\":\"name\",\"price\":\"price\",\"category_id\":\"category_id\"}")
+  """Obtiene la disponibilidad filtrada por los parámetros proporcionados"""
+  availability(
+    """ID"""
+    id: Int
+    """ID del trabajador"""
+    worker_id: Int
+    """Día de la semana (0-6, donde 0 es lunes)"""
+    weekday: String
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/availability", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"worker_id\":\"worker_id\",\"weekday\":\"weekday\"}")
+  """Obtiene los días libres filtrados por los parámetros proporcionados"""
+  days_off(
+    """ID"""
+    id: Int
+    """ID del trabajador"""
+    worker_id: Int
+    """Fecha (YYYY-MM-DD)"""
+    dayoff: Date
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/days_off", httpMethod: GET, queryParamArgMap: "{\"id\":\"id\",\"worker_id\":\"worker_id\",\"dayoff\":\"dayoff\"}")
+}
+
+type Mutation {
+  """Autentica un usuario y retorna un token JWT"""
+  post_api_login(input: models_LoginRequest_Input!): post_api_login_response @httpOperation(subgraph: "fs_ms_au", path: "/api/login", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Registra un nuevo manager en el sistema"""
+  post_api_manager_register(input: models_RegisterManagerRequest_Input!): post_api_manager_register_response @httpOperation(subgraph: "fs_ms_au", path: "/api/manager_register", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Registra un nuevo usuario en el sistema"""
+  post_api_register(input: models_RegisterUserRequest_Input!): post_api_register_response @httpOperation(subgraph: "fs_ms_au", path: "/api/register", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Permite a un usuario iniciar sesión"""
+  post_login(input: post_login_request_Input!): post_login_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/login", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Permite registrar un nuevo usuario en el sistema"""
+  post_register(input: post_register_request_Input!): post_register_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/register", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Permite registrar un nuevo administrador en el sistema"""
+  post_manager_register(input: post_manager_register_request_Input!): post_manager_register_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/manager_register", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Permite a un usuario cerrar sesión en el sistema"""
+  post_logout: post_logout_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/logout", httpMethod: POST)
+  """Permite registrar un nuevo usuario utilizando la cuenta de Google"""
+  post_register_google(input: post_register_google_request_Input!): post_register_google_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/register_google", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Permite iniciar sesión utilizando la cuenta de Google"""
+  post_login_google(input: post_login_google_request_Input!): post_login_google_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/login_google", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Permite habilitar la autenticación de dos factores para un usuario"""
+  post_enable_2fa: post_enable_2fa_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/enable-2fa", httpMethod: POST)
+  """Permite verificar un código de autenticación de dos factores"""
+  post_verify_2fa(input: post_verify_2fa_request_Input!): post_verify_2fa_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/verify-2fa", httpMethod: POST)
+  """Actualiza la información de un usuario específico"""
+  put_user_by_id(
+    """ID del usuario"""
+    id: Int!
+    input: put_user_by_id_request_Input!
+  ): put_user_by_id_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/user/{args.id}", httpMethod: PUT)
+  """Elimina a un usuario específico"""
+  delete_user_by_id(
+    """ID del usuario"""
+    id: Int!
+  ): delete_user_by_id_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/user/{args.id}", httpMethod: DELETE)
+  """
+  Envía un correo electrónico con un enlace para restablecer la contraseña
+  """
+  post_user_reset_password_request(input: post_user_reset_password_request_request_Input!): post_user_reset_password_request_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/user/reset-password-request", httpMethod: POST)
+  """Restablece la contraseña del usuario utilizando el token proporcionado"""
+  post_user_reset_password(input: post_user_reset_password_request_Input!): post_user_reset_password_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/user/reset-password", httpMethod: POST)
+  """Crea un nuevo sitio"""
+  post_site(input: post_site_request_Input!): post_site_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/site", httpMethod: POST)
+  """Actualiza la información de un sitio existente"""
+  put_site(
+    """ID del sitio"""
+    id: Int
+    input: put_site_request_Input!
+  ): put_site_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/site", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina un sitio existente"""
+  delete_site(
+    """ID del sitio"""
+    id: Int
+  ): delete_site_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/site", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """Obtiene la lista de las categorías por sitio"""
+  post_site_has_category(input: post_site_has_category_request_Input!): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/site_has_category", httpMethod: POST)
+  """Crea una nueva cita"""
+  post_appointment(input: post_appointment_request_Input!): post_appointment_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/appointment", httpMethod: POST)
+  """Actualiza la información de una cita existente"""
+  put_appointment(
+    """ID de la cita a eliminar"""
+    id: Int!
+    input: put_appointment_request_Input!
+  ): put_appointment_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/appointment", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina una cita existente"""
+  delete_appointment(
+    """ID de la cita a eliminar"""
+    id: Int!
+  ): delete_appointment_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/appointment", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """Crea un nuevo servicio"""
+  post_service(input: post_service_request_Input!): post_service_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/service", httpMethod: POST)
+  """Crea un nuevo trabajador"""
+  post_worker(input: post_worker_request_Input!): post_worker_201_response @httpOperation(subgraph: "fs_ms_lc", path: "/worker", httpMethod: POST)
+  """Actualiza la información de un trabajador existente"""
+  put_worker(
+    """ID del trabajador"""
+    id: Int
+    input: put_worker_request_Input!
+  ): put_worker_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/worker", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina un trabajador existente"""
+  delete_worker(
+    """ID del trabajador"""
+    id: Int
+  ): delete_worker_200_response @httpOperation(subgraph: "fs_ms_lc", path: "/worker", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """Modifica los servicios por trabajador"""
+  post_worker_has_service(input: post_worker_has_service_request_Input!): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/worker_has_service", httpMethod: POST)
+  """Actualiza la suscripción de un administrador"""
+  put_subscription_by_id(
+    """ID del administrador"""
+    id: Int!
+    input: put_subscription_by_id_request_Input!
+  ): put_subscription_by_id_response @httpOperation(subgraph: "fs_ms_lc", path: "/subscription/{args.id}", httpMethod: PUT)
+  """Crea una nueva notificación"""
+  post_notification(input: post_notification_request_Input!): post_notification_response @httpOperation(subgraph: "fs_ms_lc", path: "/notification", httpMethod: POST)
+  """Actualiza una notificación existente"""
+  put_notification(
+    """ID de la notificación"""
+    id: Int
+    input: put_notification_request_Input!
+  ): put_notification_response @httpOperation(subgraph: "fs_ms_lc", path: "/notification", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina una notificación existente"""
+  delete_notification(
+    """ID de la notificación a eliminar"""
+    id: Int!
+  ): delete_notification_response @httpOperation(subgraph: "fs_ms_lc", path: "/notification", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """Crea un nuevo pago"""
+  post_payment(input: post_payment_request_Input!): post_payment_response @httpOperation(subgraph: "fs_ms_lc", path: "/payment", httpMethod: POST)
+  """Actualiza un pago existente"""
+  put_payment(
+    """ID del pago"""
+    id: Int
+    input: put_payment_request_Input!
+  ): put_payment_response @httpOperation(subgraph: "fs_ms_lc", path: "/payment", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina un pago existente"""
+  delete_payment(
+    """ID del pago a eliminar"""
+    id: Int!
+  ): delete_payment_response @httpOperation(subgraph: "fs_ms_lc", path: "/payment", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """Crea un nuevo servicio"""
+  post_detail(input: post_detail_request_Input!): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/detail", httpMethod: POST)
+  """Actualiza una disponibilidad existente"""
+  put_detail(
+    """ID del sitio"""
+    site_id: Int
+    """ID del servicio"""
+    service_id: Int
+    input: put_detail_request_Input!
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/detail", httpMethod: PUT, queryParamArgMap: "{\"site_id\":\"site_id\",\"service_id\":\"service_id\"}")
+  """Elimina una disponibilidad existente"""
+  delete_detail(
+    """ID del sitio"""
+    site_id: Int
+    """ID del servicio"""
+    service_id: Int
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/detail", httpMethod: DELETE, queryParamArgMap: "{\"site_id\":\"site_id\",\"service_id\":\"service_id\"}")
+  """Crea una nueva disponibilidad"""
+  post_availability(input: post_availability_request_Input!): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/availability", httpMethod: POST)
+  """Actualiza una disponibilidad existente"""
+  put_availability(
+    """ID"""
+    id: Int
+    input: put_availability_request_Input!
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/availability", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina una disponibilidad existente"""
+  delete_availability(
+    """ID"""
+    id: Int
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/availability", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """Crea un nuevo día libre"""
+  post_days_off(input: post_days_off_request_Input!): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/days_off", httpMethod: POST)
+  """Actualiza los días libres filtrados por los parámetros proporcionados"""
+  put_days_off(
+    """ID"""
+    id: Int
+    input: put_days_off_request_Input!
+  ): [JSON] @httpOperation(subgraph: "fs_ms_lc", path: "/days_off", httpMethod: PUT, queryParamArgMap: "{\"id\":\"id\"}")
+  """Elimina un día libre existente"""
+  delete_days_off(
+    """ID"""
+    id: Int
+  ): JSON @httpOperation(subgraph: "fs_ms_lc", path: "/days_off", httpMethod: DELETE, queryParamArgMap: "{\"id\":\"id\"}")
+  """
+  Receives a user message, processes it with the Langchain agent via LLMService, and returns the agent's reply.
+  """
+  post_send(input: ChatRequest_Input): post_send_response @httpOperation(subgraph: "fs_ms_cb", path: "/send", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+}
+
+union post_api_login_response @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "200", typeName: "models_LoginResponse") @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "401", typeName: "models_ErrorResponse") = models_LoginResponse | models_ErrorResponse
+
+type models_LoginResponse {
+  message: String
+  token: String
+  user: models_UserResponse
+}
+
+type models_UserResponse {
+  email: EmailAddress
+  id: Int
+  name: String
+}
+
+"""
+A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
+"""
+scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
+
+type models_ErrorResponse {
+  error: String
+}
+
+"""Credenciales de acceso"""
+input models_LoginRequest_Input {
+  email: EmailAddress
+  password: String
+}
+
+union post_api_manager_register_response @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "200", typeName: "models_RegisterUserResponse") @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "400", typeName: "models_ErrorResponse") = models_RegisterUserResponse | models_ErrorResponse
+
+type models_RegisterUserResponse {
+  message: String
+  user: models_UserResponse
+}
+
+"""Información del manager"""
+input models_RegisterManagerRequest_Input {
+  accounttype: String
+  bankaccount: Int
+  bankentity: String
+  email: EmailAddress
+  name: String
+  password: String
+  subscriptionactive: Boolean
+  subscriptionfinishdate: Date
+  subscriptionstartdate: Date
+  subscriptiontype: String
+}
+
+"""Represents date values"""
+scalar Date
+
+union post_api_register_response @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "200", typeName: "models_RegisterUserResponse") @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "400", typeName: "models_ErrorResponse") = models_RegisterUserResponse | models_ErrorResponse
+
+"""Información del usuario"""
+input models_RegisterUserRequest_Input {
+  email: EmailAddress
+  name: String
+  password: String
+}
+
+enum HTTPMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap
+
+type user_by_id_200_response {
+  id: Int
+  name: String
+  email: String
+  active: Boolean
+}
+
+type query_site_items {
+  id: Int
+  name: String
+  address: String
+  phone: Int
+  manager_id: Int
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+type query_appointment_items {
+  id: Int
+  appointmenttime: DateTime
+  status: String
+  worker_id: Int
+  site_id: Int
+  service_id: Int
+  client_id: Int
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type query_service_items {
+  id: Int
+  name: String
+  category_id: Int
+}
+
+type query_category_items {
+  id: Int
+  name: String
+}
+
+type query_worker_items {
+  id: Int
+  user_id: Int
+  site_id: Int
+}
+
+union subscription_by_id_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "subscription_by_id_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "subscription_by_id_404_response") = subscription_by_id_200_response | subscription_by_id_404_response
+
+type subscription_by_id_200_response {
+  id: Int
+  subscriptionactive: Boolean
+  subscriptionstartdate: DateTime
+  subscriptiontype: String
+  subscriptionfinishdate: DateTime
+}
+
+type subscription_by_id_404_response {
+  message: String
+}
+
+union notification_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "query_notification_oneOf_0_items") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "notification_404_response") = query_notification_oneOf_0_items | notification_404_response
+
+type query_notification_oneOf_0_items {
+  id: Int
+  type: String
+  status: String
+  appointment_id: Int
+  worker_id: Int
+  service_id: Int
+  site_id: Int
+}
+
+type notification_404_response {
+  message: String
+}
+
+union payment_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "query_payment_oneOf_0_items") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "payment_404_response") = query_payment_oneOf_0_items | payment_404_response
+
+type query_payment_oneOf_0_items {
+  id: Int
+  amount: Int
+  paymentmethod: String
+  status: String
+  appointment_id: Int
+  worker_id: Int
+  service_id: Int
+  site_id: Int
+}
+
+type payment_404_response {
+  message: String
+}
+
+union payment_worker_statistics_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "payment_worker_statistics_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "payment_worker_statistics_400_response") = payment_worker_statistics_200_response | payment_worker_statistics_400_response
+
+type payment_worker_statistics_200_response {
+  site_id: Int
+  period: String
+  count_periods: Int
+  statistics: [query_payment_worker_statistics_oneOf_0_statistics_items]
+}
+
+type query_payment_worker_statistics_oneOf_0_statistics_items {
+  worker_id: Int
+  total_amount: Int
+  day: Date
+  week_start: Date
+  year: Int
+  month: Int
+}
+
+type payment_worker_statistics_400_response {
+  message: String
+}
+
+union payment_site_statistics_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "payment_site_statistics_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "payment_site_statistics_400_response") = payment_site_statistics_200_response | payment_site_statistics_400_response
+
+type payment_site_statistics_200_response {
+  site_id: Int
+  period: String
+  count_periods: Int
+  statistics: [query_payment_site_statistics_oneOf_0_statistics_items]
+}
+
+type query_payment_site_statistics_oneOf_0_statistics_items {
+  total_amount: Int
+  day: Date
+  week_start: Date
+  year: Int
+  month: Int
+}
+
+type payment_site_statistics_400_response {
+  message: String
+}
+
+union payment_service_statistics_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "payment_service_statistics_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "payment_service_statistics_400_response") = payment_service_statistics_200_response | payment_service_statistics_400_response
+
+type payment_service_statistics_200_response {
+  site_id: Int
+  period: String
+  count_periods: Int
+  statistics: [query_payment_service_statistics_oneOf_0_statistics_items]
+}
+
+type query_payment_service_statistics_oneOf_0_statistics_items {
+  service_id: Int
+  total_amount: Int
+  day: Date
+  week_start: Date
+  year: Int
+  month: Int
+}
+
+type payment_service_statistics_400_response {
+  message: String
+}
+
+type post_login_200_response {
+  user: JSON
+  access_token: String
+  refresh_token: String
+  manager: String
+  subscription_active: String
+}
+
+"""Credenciales del usuario"""
+input post_login_request_Input {
+  email: EmailAddress!
+  password: String!
+}
+
+type post_register_201_response {
+  message: String
+  user: JSON
+}
+
+"""Datos del nuevo usuario"""
+input post_register_request_Input {
+  name: String!
+  email: EmailAddress!
+  password: String!
+}
+
+type post_manager_register_201_response {
+  message: String
+  user: JSON
+}
+
+"""Datos del nuevo administrador"""
+input post_manager_register_request_Input {
+  name: String!
+  email: EmailAddress!
+  password: String!
+}
+
+type post_logout_200_response {
+  message: String
+}
+
+type post_register_google_201_response {
+  message: String
+  user: JSON
+}
+
+"""Token de autenticación de Google"""
+input post_register_google_request_Input {
+  token: String!
+}
+
+type post_login_google_200_response {
+  access_token: String
+  refresh_token: String
+  user: JSON
+}
+
+"""Token de autenticación de Google"""
+input post_login_google_request_Input {
+  token: String!
+}
+
+type post_enable_2fa_200_response {
+  message: String
+  secret: String
+  uri: String
+}
+
+type post_verify_2fa_200_response {
+  message: String
+}
+
+"""Código de verificación"""
+input post_verify_2fa_request_Input {
+  token: String!
+}
+
+type put_user_by_id_200_response {
+  message: String
+}
+
+"""Nueva información del usuario"""
+input put_user_by_id_request_Input {
+  password: String
+}
+
+type delete_user_by_id_200_response {
+  message: String
+}
+
+type post_user_reset_password_request_200_response {
+  message: String
+}
+
+"""Correo electrónico del usuario"""
+input post_user_reset_password_request_request_Input {
+  email: EmailAddress!
+}
+
+type post_user_reset_password_200_response {
+  message: String
+}
+
+"""Nueva contraseña y token de restablecimiento"""
+input post_user_reset_password_request_Input {
+  token: String!
+  password: String!
+}
+
+type post_site_201_response {
+  message: String
+  site: JSON
+}
+
+"""Información del sitio"""
+input post_site_request_Input {
+  name: String!
+  address: String!
+  phone: Int!
+  manager_id: Int!
+  category_id: Int
+  service_id: Int
+  photos: mutationInput_post_site_input_photos_Input
+}
+
+input mutationInput_post_site_input_photos_Input {
+  photo1: String
+  photo2: String
+}
+
+type put_site_200_response {
+  message: String
+  site: JSON
+}
+
+"""Nueva información del sitio"""
+input put_site_request_Input {
+  name: String
+  address: String
+  phone: Int
+  manager_id: Int
+  photos: mutationInput_put_site_input_photos_Input
+  id: JSON!
+}
+
+input mutationInput_put_site_input_photos_Input {
+  photo1: String
+  photo2: String
+}
+
+type delete_site_200_response {
+  message: String
+}
+
+"""Información del sitio"""
+input post_site_has_category_request_Input {
+  site_id: Int
+  category_id: Int
+}
+
+type post_appointment_201_response {
+  message: String
+  appointment: JSON
+}
+
+"""Información de la cita"""
+input post_appointment_request_Input {
+  appointmenttime: DateTime!
+  status: String = "pending"
+  worker_id: Int!
+  site_id: Int!
+  service_id: Int!
+  client_id: Int!
+  request: Boolean
+}
+
+type put_appointment_200_response {
+  message: String
+  appointment: JSON
+}
+
+"""Nueva información de la cita"""
+input put_appointment_request_Input {
+  appointmenttime: DateTime
+  status: String
+  worker_id: Int
+  site_id: Int
+  service_id: Int
+  client_id: Int
+}
+
+type delete_appointment_200_response {
+  message: String
+}
+
+type post_service_201_response {
+  message: String
+  service: JSON
+}
+
+"""Información del servicio"""
+input post_service_request_Input {
+  name: String!
+  category_id: Int!
+}
+
+type post_worker_201_response {
+  message: String
+  worker: JSON
+}
+
+"""Información del trabajador"""
+input post_worker_request_Input {
+  name: String
+  site_id: Int
+  profilepicture: String
+  description: String
+}
+
+type put_worker_200_response {
+  message: String
+  worker: JSON
+}
+
+"""Información del trabajador"""
+input put_worker_request_Input {
+  name: String
+  site_id: Int
+  profilepicture: String
+  description: String
+}
+
+type delete_worker_200_response {
+  message: String
+}
+
+"""Información del sitio"""
+input post_worker_has_service_request_Input {
+  worker_id: Int
+  service_id: Int
+}
+
+union put_subscription_by_id_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "put_subscription_by_id_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "put_subscription_by_id_400_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "put_subscription_by_id_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "put_subscription_by_id_500_response") = put_subscription_by_id_200_response | put_subscription_by_id_400_response | put_subscription_by_id_404_response | put_subscription_by_id_500_response
+
+type put_subscription_by_id_200_response {
+  manager: mutation_put_subscription_by_id_oneOf_0_manager
+}
+
+type mutation_put_subscription_by_id_oneOf_0_manager {
+  id: Int
+  subscriptionactive: Boolean
+  subscriptionstartdate: DateTime
+  subscriptiontype: String
+  subscriptionfinishdate: DateTime
+}
+
+type put_subscription_by_id_400_response {
+  message: String
+}
+
+type put_subscription_by_id_404_response {
+  message: String
+}
+
+type put_subscription_by_id_500_response {
+  message: String
+}
+
+"""Nueva información de la suscripción"""
+input put_subscription_by_id_request_Input {
+  """Estado de la suscripción (activa o inactiva)"""
+  subscriptionactive: Boolean!
+  """Fecha de inicio de la suscripción (formato: YYYY-MM-DDThh:mm:ss)"""
+  subscriptionstartdate: DateTime
+  """Tipo de suscripción (básica, premium, etc.)"""
+  subscriptiontype: String
+  """Fecha de finalización de la suscripción (formato: YYYY-MM-DDThh:mm:ss)"""
+  subscriptionfinishdate: DateTime
+}
+
+union post_notification_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "201", typeName: "JSON_container") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "post_notification_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "post_notification_500_response") = JSON_container | post_notification_404_response | post_notification_500_response
+
+type JSON_container {
+  JSON: JSON @resolveRoot(subgraph: "fs_ms_lc")
+}
+
+type post_notification_404_response {
+  message: String
+}
+
+type post_notification_500_response {
+  message: String
+}
+
+"""Información de la notificación"""
+input post_notification_request_Input {
+  timestamp: Int
+  """Tipo de notificación"""
+  type: String!
+  """Estado de la notificación"""
+  status: String = "pending"
+  """ID de la cita asociada"""
+  appointment_id: Int!
+}
+
+union put_notification_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "JSON_container") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "put_notification_400_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "put_notification_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "put_notification_500_response") = JSON_container | put_notification_400_response | put_notification_404_response | put_notification_500_response
+
+type put_notification_400_response {
+  message: String
+}
+
+type put_notification_404_response {
+  message: String
+}
+
+type put_notification_500_response {
+  message: String
+}
+
+"""Nueva información de la notificación"""
+input put_notification_request_Input {
+  timestamp: Int
+  """Tipo de notificación"""
+  type: String
+  """Estado de la notificación"""
+  status: String
+  """ID de la cita asociada"""
+  appointment_id: Int
+}
+
+union delete_notification_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "delete_notification_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "delete_notification_400_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "delete_notification_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "delete_notification_500_response") = delete_notification_200_response | delete_notification_400_response | delete_notification_404_response | delete_notification_500_response
+
+type delete_notification_200_response {
+  message: String
+}
+
+type delete_notification_400_response {
+  message: String
+}
+
+type delete_notification_404_response {
+  message: String
+}
+
+type delete_notification_500_response {
+  message: String
+}
+
+union post_payment_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "201", typeName: "JSON_container") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "post_payment_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "post_payment_500_response") = JSON_container | post_payment_404_response | post_payment_500_response
+
+type post_payment_404_response {
+  message: String
+}
+
+type post_payment_500_response {
+  message: String
+}
+
+"""Información del pago"""
+input post_payment_request_Input {
+  """Monto del pago"""
+  amount: Int
+  """Método de pago (efectivo, tarjeta, etc.)"""
+  paymentmethod: String
+  """Estado del pago"""
+  status: String = "pending"
+  """ID de la cita asociada"""
+  appointment_id: Int
+}
+
+union put_payment_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "JSON_container") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "put_payment_400_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "put_payment_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "put_payment_500_response") = JSON_container | put_payment_400_response | put_payment_404_response | put_payment_500_response
+
+type put_payment_400_response {
+  message: String
+}
+
+type put_payment_404_response {
+  message: String
+}
+
+type put_payment_500_response {
+  message: String
+}
+
+"""Nueva información del pago"""
+input put_payment_request_Input {
+  timestamp: Int
+  """Monto del pago"""
+  amount: Int
+  """Método de pago (efectivo, tarjeta, etc.)"""
+  paymentmethod: String
+  """Estado del pago"""
+  status: String
+  """ID de la cita asociada"""
+  appointment_id: Int
+}
+
+union delete_payment_response @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "200", typeName: "delete_payment_200_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "400", typeName: "delete_payment_400_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "404", typeName: "delete_payment_404_response") @statusCodeTypeName(subgraph: "fs_ms_lc", statusCode: "500", typeName: "delete_payment_500_response") = delete_payment_200_response | delete_payment_400_response | delete_payment_404_response | delete_payment_500_response
+
+type delete_payment_200_response {
+  message: String
+}
+
+type delete_payment_400_response {
+  message: String
+}
+
+type delete_payment_404_response {
+  message: String
+}
+
+type delete_payment_500_response {
+  message: String
+}
+
+"""Información de disponibilidad"""
+input post_detail_request_Input {
+  site_id: Int
+  service_id: Int
+  description: String
+  price: String
+  photos: mutationInput_post_detail_input_photos_Input
+}
+
+input mutationInput_post_detail_input_photos_Input {
+  before: URL
+  after: URL
+}
+
+"""
+A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.
+"""
+scalar URL
+
+"""Información de disponibilidad"""
+input put_detail_request_Input {
+  site_id: Int
+  service_id: Int
+  description: String
+  price: String
+  photos: mutationInput_put_detail_input_photos_Input
+}
+
+input mutationInput_put_detail_input_photos_Input {
+  before: URL
+  after: URL
+}
+
+"""Información de disponibilidad"""
+input post_availability_request_Input {
+  worker_id: Int!
+  weekday: Int!
+  starttime: Time!
+  endtime: Time!
+}
+
+"""
+A time string at UTC, such as 10:15:30Z, compliant with the `full-time` format outlined in section 5.6 of the RFC 3339profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar Time
+
+"""Nueva información de disponibilidad"""
+input put_availability_request_Input {
+  worker_id: Int
+  weekday: String
+  starttime: Time
+  endtime: Time
+}
+
+"""Información del día libre"""
+input post_days_off_request_Input {
+  worker_id: Int!
+  dayoff: Date!
+}
+
+"""Información del día libre"""
+input put_days_off_request_Input {
+  worker_id: Int!
+  dayoff: Date!
+}
+
+union post_send_response @statusCodeTypeName(subgraph: "fs_ms_cb", statusCode: "200", typeName: "ChatResponse") @statusCodeTypeName(subgraph: "fs_ms_cb", statusCode: "400", typeName: "post_send_400_response") @statusCodeTypeName(subgraph: "fs_ms_cb", statusCode: "500", typeName: "post_send_500_response") = ChatResponse | post_send_400_response | post_send_500_response
+
+type ChatResponse {
+  """The agent's reply."""
+  reply: String
+  """The session ID."""
+  session_id: String
+}
+
+type post_send_400_response {
+  detail: String
+}
+
+type post_send_500_response {
+  detail: String
+}
+
+input ChatRequest_Input {
+  """The user's message."""
+  message: String!
+  """The session ID to maintain conversation context."""
+  session_id: String
+}

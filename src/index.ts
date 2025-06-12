@@ -1,23 +1,32 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { typeDefs } from './schema/typeDefs.js';
-import { userResolver } from './resolvers/userResolver.js';
-import { chatbotResolver } from './resolvers/chatbotResolver.js';
+import { getBuiltMesh } from '../.mesh';
 
-const resolvers = {
-  Query: {
-    ...userResolver,
-    ...chatbotResolver,
-  },
-};
+async function startServer() {
+  // Get the mesh instance
+  const mesh = await getBuiltMesh();
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  // Create Apollo Server with mesh schema
+  const server = new ApolloServer({
+    schema: mesh.schema,
+  });
+
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: 4000, host: '0.0.0.0' },
+    context: async ({ req }) => {
+      // Return basic context for now
+      return {
+        req,
+      };
+    },
+  });
+
+  console.log(`🚀 Gateway running at ${url}`);
+  console.log(`📊 GraphQL Mesh integrated with Apollo Server`);
+  console.log(`🔗 Available services: fs_ms_au, fs_ms_lc, fs_ms_cb`);
+}
+
+startServer().catch((error) => {
+  console.error('❌ Error starting server:', error);
+  process.exit(1);
 });
-
-const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
-});
-
-console.log(`🚀 Gateway running at ${url}`);

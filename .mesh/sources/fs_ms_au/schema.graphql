@@ -1,0 +1,99 @@
+schema @transport(subgraph: "fs_ms_au", kind: "rest", location: "http://localhost:5000/") {
+  query: Query
+  mutation: Mutation
+}
+
+directive @statusCodeTypeName(subgraph: String, typeName: String, statusCode: String) repeatable on UNION
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  dummy: String
+}
+
+type Mutation {
+  """Autentica un usuario y retorna un token JWT"""
+  post_api_login(input: models_LoginRequest_Input!): post_api_login_response @httpOperation(subgraph: "fs_ms_au", path: "/api/login", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Registra un nuevo manager en el sistema"""
+  post_api_manager_register(input: models_RegisterManagerRequest_Input!): post_api_manager_register_response @httpOperation(subgraph: "fs_ms_au", path: "/api/manager_register", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+  """Registra un nuevo usuario en el sistema"""
+  post_api_register(input: models_RegisterUserRequest_Input!): post_api_register_response @httpOperation(subgraph: "fs_ms_au", path: "/api/register", operationSpecificHeaders: [["Content-Type", "application/json"], ["Accept", "application/json"]], httpMethod: POST)
+}
+
+union post_api_login_response @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "200", typeName: "models_LoginResponse") @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "401", typeName: "models_ErrorResponse") = models_LoginResponse | models_ErrorResponse
+
+type models_LoginResponse {
+  message: String
+  token: String
+  user: models_UserResponse
+}
+
+type models_UserResponse {
+  email: EmailAddress
+  id: Int
+  name: String
+}
+
+"""
+A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
+"""
+scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
+
+type models_ErrorResponse {
+  error: String
+}
+
+"""Credenciales de acceso"""
+input models_LoginRequest_Input {
+  email: EmailAddress
+  password: String
+}
+
+union post_api_manager_register_response @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "200", typeName: "models_RegisterUserResponse") @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "400", typeName: "models_ErrorResponse") = models_RegisterUserResponse | models_ErrorResponse
+
+type models_RegisterUserResponse {
+  message: String
+  user: models_UserResponse
+}
+
+"""Información del manager"""
+input models_RegisterManagerRequest_Input {
+  accounttype: String
+  bankaccount: Int
+  bankentity: String
+  email: EmailAddress
+  name: String
+  password: String
+  subscriptionactive: Boolean
+  subscriptionfinishdate: Date
+  subscriptionstartdate: Date
+  subscriptiontype: String
+}
+
+"""Represents date values"""
+scalar Date
+
+union post_api_register_response @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "200", typeName: "models_RegisterUserResponse") @statusCodeTypeName(subgraph: "fs_ms_au", statusCode: "400", typeName: "models_ErrorResponse") = models_RegisterUserResponse | models_ErrorResponse
+
+"""Información del usuario"""
+input models_RegisterUserRequest_Input {
+  email: EmailAddress
+  name: String
+  password: String
+}
+
+enum HTTPMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap

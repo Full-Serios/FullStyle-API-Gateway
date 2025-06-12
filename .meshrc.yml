@@ -1,0 +1,18 @@
+sources:
+  - name: fs_ms_au
+    handler:
+      openapi:
+        source: ./openapi-schemas/openapi-auth.yaml
+        baseUrl: http://fullstyle-local-orchestration-fs_ms_au:5000/       # 👈 nombre del servicio y PUERTO INTERNO
+
+  - name: fs_ms_lc
+    handler:
+      openapi:
+        source: ./openapi-schemas/openapi-logic.yaml
+        baseUrl: http://fullstyle-local-orchestration-fs_ms_lc:5000/api/   # 👈 correcto
+
+  - name: fs_ms_cb
+    handler:
+      openapi:
+        source: ./openapi-schemas/openapi-chatbot.yaml
+        baseUrl: http://fullstyle-local-orchestration-fs_ms_cb:8080/api/v1/  # 👈 correcto

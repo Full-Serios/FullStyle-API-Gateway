@@ -1,0 +1,59 @@
+schema @transport(subgraph: "fs_ms_cb", kind: "rest") {
+  query: Query
+  mutation: Mutation
+}
+
+directive @statusCodeTypeName(subgraph: String, typeName: String, statusCode: String) repeatable on UNION
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+type Query {
+  dummy: String
+}
+
+type Mutation {
+  """
+  Receives a user message, processes it with the Langchain agent via LLMService, and returns the agent's reply.
+  """
+  post_send(input: ChatRequest_Input): post_send_response @httpOperation(subgraph: "fs_ms_cb", path: "/send", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST)
+}
+
+union post_send_response @statusCodeTypeName(subgraph: "fs_ms_cb", statusCode: "200", typeName: "ChatResponse") @statusCodeTypeName(subgraph: "fs_ms_cb", statusCode: "400", typeName: "post_send_400_response") @statusCodeTypeName(subgraph: "fs_ms_cb", statusCode: "500", typeName: "post_send_500_response") = ChatResponse | post_send_400_response | post_send_500_response
+
+type ChatResponse {
+  """The agent's reply."""
+  reply: String
+  """The session ID."""
+  session_id: String
+}
+
+type post_send_400_response {
+  detail: String
+}
+
+type post_send_500_response {
+  detail: String
+}
+
+input ChatRequest_Input {
+  """The user's message."""
+  message: String!
+  """The session ID to maintain conversation context."""
+  session_id: String
+}
+
+enum HTTPMethod {
+  GET
+  HEAD
+  POST
+  PUT
+  DELETE
+  CONNECT
+  OPTIONS
+  TRACE
+  PATCH
+}
+
+scalar ObjMap
