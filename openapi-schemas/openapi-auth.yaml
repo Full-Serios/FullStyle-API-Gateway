@@ -100,6 +100,7 @@ info:
 paths:
   /api/login:
     post:
+      operationId: post_api_login
       consumes:
       - application/json
       description: Autentica un usuario y retorna un token JWT
@@ -126,6 +127,7 @@ paths:
       - Autenticación
   /api/manager_register:
     post:
+      operationId: post_api_manager_register
       consumes:
       - application/json
       description: Registra un nuevo manager en el sistema
@@ -152,6 +154,7 @@ paths:
       - Autenticación
   /api/register:
     post:
+      operationId: post_api_register
       consumes:
       - application/json
       description: Registra un nuevo usuario en el sistema

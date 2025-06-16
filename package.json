@@ -4,28 +4,16 @@
 	"scripts": {
 		"build": "tsc",
 		"start": "node dist/src/index.js",
-		"dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-		"mesh:generate": "graphql-mesh generate",
-		"mesh:dev": "graphql-mesh dev",
-		"mesh:build": "graphql-mesh build"
+		"dev": "ts-node-dev --respawn --transpile-only src/index.ts"
 	},
 	"dependencies": {
 		"@apollo/server": "^4.12.2",
-		"@graphql-mesh/cache-localforage": "^0.105.5",
-		"@graphql-mesh/cross-helpers": "^0.4.10",
-		"@graphql-mesh/http": "^0.106.4",
-		"@graphql-mesh/merger-stitching": "^0.105.4",
-		"@graphql-mesh/openapi": "^0.109.11",
-		"@graphql-mesh/runtime": "^0.106.4",
-		"@graphql-mesh/store": "^0.104.4",
-		"@graphql-mesh/types": "^0.104.4",
-		"@graphql-mesh/utils": "^0.104.4",
-		"@whatwg-node/fetch": "^0.10.8",
+		"@graphql-tools/merge": "^9.0.24",
 		"axios": "^1.9.0",
-		"graphql": "^16.11.0"
+		"graphql": "^16.11.0",
+		"graphql-tag": "^2.12.6"
 	},
 	"devDependencies": {
-		"@graphql-mesh/cli": "^0.100.5",
 		"ts-node-dev": "^2.0.0",
 		"typescript": "^5.8.3"
 	}

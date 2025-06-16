@@ -1,27 +1,21 @@
 # Etapa 1: Build de TypeScript
 FROM node:20 AS builder
 
-# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia archivos necesarios
+# Copiar archivos esenciales
 COPY package.json pnpm-lock.yaml ./
 COPY tsconfig.json ./
-COPY .meshrc.yml ./
 COPY .env ./
 
-# Copia el resto del código
+# Copiar el código fuente
 COPY ./src ./src
-COPY ./openapi-schemas ./openapi-schemas
-COPY ./.mesh ./.mesh
 
-# Instala pnpm y dependencias
+# Copiar los esquemas GraphQL directamente (no dentro de src en prod)
+COPY ./src/graphql/schemas ./graphql
+
+# Instalar dependencias y compilar
 RUN npm install -g pnpm && pnpm install
-
-# Genera el código de Mesh (opcional si lo usas en producción)
-RUN pnpm mesh:generate
-
-# Compila el proyecto
 RUN pnpm build
 
 # Etapa 2: Imagen final para producción
@@ -29,16 +23,17 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copia solo lo necesario desde el builder
+# Copiar solo lo necesario desde la etapa de build
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/.env ./
+COPY --from=builder /app/graphql ./graphql
 
-# Instala sólo las dependencias de producción
+# Instalar solo dependencias de producción
 RUN npm install -g pnpm && pnpm install --prod
 
-# Expone el puerto (ajústalo si usas otro)
+# Exponer el puerto (ajusta si usas otro)
 EXPOSE 4000
 
-# Comando para iniciar el servidor
-CMD ["node", "dist/src/index.js"]
+# Comando de inicio
+CMD ["node", "dist/index.js"]
