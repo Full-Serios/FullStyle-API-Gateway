@@ -1,0 +1,127 @@
+name: CI/CD Pipeline - Apollo Server
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+  issues: read
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_NAME: dev-fullstyle-apollo
+  GAR_LOCATION: us-central1
+  GCP_REGION: us-central1
+  SERVICE_NAME: dev-fullstyle-apollo-back
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Google Cloud Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker "${{ env.GAR_LOCATION }}-docker.pkg.dev"
+
+      - name: Create dummy .env (Cloud Run uses real secrets)
+        run: |
+          touch .env
+          echo "# Autogenerado para CI/CD" > .env
+          echo "# Las variables reales están configuradas en Cloud Run" >> .env
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_NAME="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_NAME }}/apollo-server-prod:${{ github.sha }}"
+          docker build -t "$IMAGE_NAME" .
+          docker push "$IMAGE_NAME"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          echo "Deploying image: $IMAGE_NAME"
+
+          gcloud run deploy "${{ env.SERVICE_NAME }}" \
+            --region "${{ env.GCP_REGION }}" \
+            --image "$IMAGE_NAME" \
+            --platform managed \
+            --allow-unauthenticated \
+            --cpu 1 \
+            --memory 512Mi \
+            --max-instances 3 \
+            --min-instances 0 \
+            --concurrency 80 \
+            --timeout 300s \
+            --set-env-vars NODE_ENV=production,PORT=4000,AUTH_BASE_URL=${{ secrets.AUTH_BASE_URL }},CHAT_BASE_URL=${{ secrets.CHAT_BASE_URL }},LOGIC_BASE_URL=${{ secrets.LOGIC_BASE_URL }} \
+            --labels managed-by=github-actions,commit-sha=${{ github.sha }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-and-deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        with:
+          fallback: v0.0.0
+        continue-on-error: true
+
+      - name: Generate next version
+        id: next-version
+        run: |
+          PREV_VERSION=${{ steps.previoustag.outputs.tag }}
+          if [[ "$PREV_VERSION" == "v0.0.0" ]]; then
+            echo "version=v0.1.0" >> $GITHUB_OUTPUT
+          else
+            MINOR_VERSION=$(echo $PREV_VERSION | cut -d. -f2)
+            NEXT_MINOR=$((MINOR_VERSION + 1))
+            echo "version=v0.${NEXT_MINOR}.0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate release notes
+        id: generate-notes
+        run: |
+          AUTHORS=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~10)..HEAD --format='%an' | sort -u | awk '{print "- " $0}')
+          COMMITS=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~10)..HEAD --format='- %s' | grep -v 'Merge')
+          cat << EOF > release_notes.md
+          ## Apollo Server Backend - Versión ${{ steps.next-version.outputs.version }}
+
+          ### 🚀 Nueva versión desplegada en Cloud Run
+
+          ### ✨ Cambios incluidos
+
+          ${COMMITS}
+
+          ### 👥 Colaboradores
+
+          ${AUTHORS}
+
+          ---
+          *Release generada automáticamente por GitHub Actions*
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.next-version.outputs.version }}
+          tag_name: ${{ steps.next-version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
