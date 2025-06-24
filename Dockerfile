@@ -6,7 +6,6 @@ WORKDIR /app
 # Copiar archivos esenciales
 COPY package.json pnpm-lock.yaml ./
 COPY tsconfig.json ./
-COPY .env ./
 
 # Copiar el código fuente
 COPY ./src ./src
@@ -26,7 +25,6 @@ WORKDIR /app
 # Copiar solo lo necesario desde la etapa de build
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env ./
 COPY --from=builder /app/graphql ./graphql
 
 # Instalar solo dependencias de producción
