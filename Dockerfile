@@ -11,7 +11,7 @@ COPY tsconfig.json ./
 COPY ./src ./src
 
 # Copiar los esquemas GraphQL directamente (no dentro de src en prod)
-COPY ./src/graphql/schemas ./graphql
+COPY ./src/graphql/schemas ./dist/graphql/schemas
 
 # Instalar dependencias y compilar
 RUN npm install -g pnpm && pnpm install
