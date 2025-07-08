@@ -6,17 +6,17 @@ WORKDIR /app
 # Copiar archivos esenciales
 COPY package.json pnpm-lock.yaml ./
 COPY tsconfig.json ./
-COPY .env ./
 
 # Copiar el código fuente
 COPY ./src ./src
 
-# Copiar los esquemas GraphQL directamente (no dentro de src en prod)
-COPY ./src/graphql/schemas ./graphql
 
 # Instalar dependencias y compilar
 RUN npm install -g pnpm && pnpm install
 RUN pnpm build
+
+# Copiar los esquemas GraphQL directamente (no dentro de src en prod)
+COPY ./src/graphql/schemas ./dist/graphql/schemas
 
 # Etapa 2: Imagen final para producción
 FROM node:20-slim
@@ -26,8 +26,6 @@ WORKDIR /app
 # Copiar solo lo necesario desde la etapa de build
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env ./
-COPY --from=builder /app/graphql ./graphql
 
 # Instalar solo dependencias de producción
 RUN npm install -g pnpm && pnpm install --prod

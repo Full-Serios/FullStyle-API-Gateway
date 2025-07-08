@@ -2,7 +2,7 @@
 	"name": "fullstyle-graphql-gateway",
 	"main": "dist/index.js",
 	"scripts": {
-		"build": "tsc",
+		"build": "tsc && cp -r src/graphql/schemas dist/graphql/schemas",
 		"start": "node dist/src/index.js",
 		"dev": "ts-node-dev --respawn --transpile-only src/index.ts"
 	},
