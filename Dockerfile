@@ -34,4 +34,4 @@ RUN npm install -g pnpm && pnpm install --prod
 EXPOSE 4000
 
 # Comando de inicio
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/src/index.js"]

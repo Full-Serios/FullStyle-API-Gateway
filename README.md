@@ -14,9 +14,9 @@ Este proyecto proporciona un **GraphQL API Gateway** que unifica todos los micro
 
 | Servicio | Tecnología | URL Base | Descripción |
 |----------|------------|----------|-------------|
-| `fs_ms_au` | Go | http://localhost:5000/ | Servicio de autenticación |
+| `fs_ms_au` | Go | http://localhost:5001/api/ | Servicio de autenticación |
 | `fs_ms_lc` | Python/Flask | http://localhost:5000/api/ | Servicio de lógica central |
-| `fs_ms_cb` | Python | http://localhost:8080/api/v1/ | Servicio de chatbot |
+| `fs_ms_cb` | Python | http://localhost:8000/api/v1/ | Servicio de chatbot |
 
 ## 🛠️ Instalación y Configuración
 
